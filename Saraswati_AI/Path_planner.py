@@ -1,3 +1,22 @@
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_vertexai import VertexAI
+import vertexai
+from langchain_google_vertexai import ChatVertexAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_google_vertexai import ChatVertexAI
+import streamlit as st
+
+
+
+st.title("Path Planner")
+vertexai.init(project="saraswati-ai", location="us-central1")
+llm = ChatVertexAI(model_name="gemini-pro", convert_system_message_to_human=True)
+
+
+# st.
+# result = llm.invoke("Write a ballad about LangChain")
+# print(result.content)
+
 
 import streamlit as st
 from fpdf import FPDF
@@ -96,159 +115,6 @@ def format_headers(text):
 
 TAVILY_API_KEY="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"
 
-tool1 = YouTubeSearchTool()
-
-@tool
-def youtube_tool(
-    topic_name: Annotated[str, "JUst give the topic name so that it generates youtube link"],
-    size1 : Annotated[str, "Also mention how many links you needed by default keep 3"]
-):
-    """Use this to run youtube tool. Return the links in a list format ."""
-    try:
-        ter = topic_name + "," + size1
-        result = tool1.run(ter)
-    except BaseException as e:
-        return f"Failed to execute. Error: {repr(e)}"
-    return f"Stdout: {result}"
-
-tools = [TavilySearchResults(max_results=1), youtube_tool]
-
-
-prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                "You are a helpful AI assistant, You are a path planner.  Explanation should be about 3 pages long"
-                "First with your knowledge explain step by step then use tools e with topics, subtopics , materials"
-                " Use the provided tools to progress towards answering the question."
-                " If you are unable to fully answer, that's OK,  "
-                "  Execute what you can to make progress."
-                " If you have the final answer or deliverable,"
-                "Any question user gave you like dish preparation or anything just create a roadmap"
-                " prefix your response with FINAL ANSWER so the team knows to stop."
-                "You will prepare a summary , paths , resources ."
-                "If you have no links don't give like this - [Some text- YouTube](insert YouTube link) just say don't know"
-                "In resources section Giving  links from the tools is must and compulsary if not there just say I didn't found resources"
-                "Use search tools only for links if you don't know then only search for content and use that content"
-                " For resources provide the links from taviely search tool and youtube tool. these tools will be provided to you "
-                "Dont ask the user loike this in resources - (insert YouTube link)"
-                " You have access to the following tools: {tool_names}.\n{system_message}",
-            ),
-            MessagesPlaceholder(variable_name="messages"),
-        ]
-    )
-system_message="You should explain from beginnner to advanced level . First summary , steps upto 2 pages content then resources section give web links and youtube links .Explain step by step . If you don't know use taviley search and create steps . provide the links of youtube and taviely search also  . Also mention  Time required Difficulty level ."
-prompt = prompt.partial(system_message=system_message)
-prompt = prompt.partial(tool_names=", ".join([tool.name for tool in tools]))
-
-
-
-tool_executor = ToolExecutor(tools)
-
-
-model = llm
-functions = [format_tool_to_openai_function(t) for t in tools]
-model = prompt | model.bind_functions(functions)
-
-
-class AgentState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], operator.add]
-
-
-
-# Define the function that determines whether to continue or not
-# @st.cache_data
-def should_continue(state):
-    messages = state['messages']
-    last_message = messages[-1]
-    # If there is no function call, then we finish
-    if "function_call" not in last_message.additional_kwargs:
-        return "end"
-    # Otherwise if there is, we continue
-    else:
-        return "continue"
-
-# Define the function that calls the model
-# @st.cache_data
-def call_model(state):
-    messages = state['messages']
-    response = model.invoke(messages)
-    # We return a list, because this will get added to the existing list
-    return {"messages": [response]}
-
-# Define the function to execute tools
-# @st.cache_data
-def call_tool(state):
-    messages = state['messages']
-    # Based on the continue condition
-    # we know the last message involves a function call
-    last_message = messages[-1]
-    # We construct an ToolInvocation from the function_call
-    action = ToolInvocation(
-        tool=last_message.additional_kwargs["function_call"]["name"],
-        tool_input=json.loads(last_message.additional_kwargs["function_call"]["arguments"]),
-    )
-    # We call the tool_executor and get back a response
-    response = tool_executor.invoke(action)
-    # We use the response to create a FunctionMessage
-    function_message = FunctionMessage(content=str(response), name=action.tool)
-    # We return a list, because this will get added to the existing list
-    return {"messages": [function_message]}
-
-
-
-# Define a new graph
-workflow = StateGraph(AgentState)
-
-# Define the two nodes we will cycle between
-workflow.add_node("agent", call_model)
-workflow.add_node("action", call_tool)
-
-# Set the entrypoint as `agent`
-# This means that this node is the first one called
-workflow.set_entry_point("agent")
-
-# We now add a conditional edge
-workflow.add_conditional_edges(
-    # First, we define the start node. We use `agent`.
-    # This means these are the edges taken after the `agent` node is called.
-    "agent",
-    # Next, we pass in the function that will determine which node is called next.
-    should_continue,
-    # Finally we pass in a mapping.
-    # The keys are strings, and the values are other nodes.
-    # END is a special node marking that the graph should finish.
-    # What will happen is we will call `should_continue`, and then the output of that
-    # will be matched against the keys in this mapping.
-    # Based on which one it matches, that node will then be called.
-    {
-        # If `tools`, then we call the tool node.
-        "continue": "action",
-        # Otherwise we finish.
-        "end": END
-    }
-)
-
-# We now add a normal edge from `tools` to `agent`.
-# This means that after `tools` is called, `agent` node is called next.
-workflow.add_edge('action', 'agent')
-
-# Finally, we compile it!
-# This compiles it into a LangChain Runnable,
-# meaning you can use it as you would any other runnable
-app = workflow.compile()
-
-@st.cache_data
-def invoke_api1(topic12):
-    inputs = {"messages": [HumanMessage(content=topic12)]}
-    response = app.invoke(inputs)['messages'][-1]
-    # Call the API to get the response
-    return response
-
-from langchain_core.messages import HumanMessage
-
-
-
 # Format headers
 if 'answer1' not in st.session_state:
     st.session_state['answer1'] = []
@@ -259,12 +125,54 @@ topic12 = st.text_input("Enter topic name:")
 
     
 
+if 'linky' not in st.session_state:
+    st.session_state['linky'] = []
+if 'linkt' not in st.session_state:
+    st.session_state['linkt'] = []
+
+
+template1 = """     
+                "You are a helpful AI assistant, You are a  course planner for user's input course.  Explanation should be about 3 pages long"
+                " you also get taviely websearch content and links if provided - {taviely}"
+                " you also get provide youtube links - {youtube}"
+                "Don;t mention anything about yourself and just give the content based on user's question"
+                User's input - {question}
+                
+            """
+
+
+prompt = PromptTemplate(
+    template=template1,input_variables=['question','taviely','youtube']
+)
+
+chain = prompt | llm
+
+
+@st.cache_data
+def invoke_api1(topic12):
+    inputs = {"question": [HumanMessage(content=topic12)],'youtube':st.session_state['linky'][-1],'taviely':st.session_state['linkt'][-1]}
+    response = chain.invoke(inputs)
+    # Call the API to get the response
+    return response
+
+from langchain_core.messages import HumanMessage
+
+
+
 
     
 @st.cache_data
 def fr(topic12):
     if topic12:
+        
         st.session_state['user1'].append(topic12)
+        tool1 = YouTubeSearchTool()
+        rtt = topic12 + "," + "3"
+        re3  = tool1.run(rtt)
+        st.session_state['linky'].append(re3)
+        re4 = TavilySearchResults(max_results=3).run(topic12)
+        st.session_state['linkt'].append(re4)
+        
         provided_text =  invoke_api1(st.session_state['user1'][-1])
         
         formatted_text = format_headers(provided_text)
