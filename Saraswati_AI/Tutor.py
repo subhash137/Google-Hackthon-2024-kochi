@@ -85,6 +85,7 @@ if 'Reasoning' not in st.session_state:
     st.session_state['Reasoning'] = 'Deductive'
 
 # Using object notation
+
 st.session_state['depth'] = st.sidebar.selectbox(
     "Depth",
     ("Elementary (Grade 1-6)", "Middle School (Grade 7-9)", "Highschool (10-12)","College Prep","Undergraduate","Graduate")
@@ -176,11 +177,11 @@ def display_chat_history1():
         # user_input = st.chat_input("Say something")
         # if user_input:
         #     st.write(f"User has sent the following prompt: {user_input}")
-        
+        configure = st.sidebar.button('configure')
         submit_button = st.form_submit_button(label='Send')
         st.session_state['past1'].append(user_input)
 
-    if submit_button and user_input:
+    if (submit_button and user_input) or (configure and user_input):
         output = conversation_chat1(user_input)
         # st.write(output)
     
