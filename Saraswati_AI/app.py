@@ -88,6 +88,7 @@ show_pages(
         Page("Tutor.py", "AI Tutor", "🧑‍🏫"),
         Page("Path_planner.py", "Path Planning", "✏"),
         Page("Quiz.py", "Quiz", "📖"),
+        Page("oral_session.py", "Interview", "🎙️"),
         
     ]
 )
