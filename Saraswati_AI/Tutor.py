@@ -70,7 +70,7 @@ vertexai.init(project="saraswati-ai", location="us-central1")
   
 llm = VertexAI(model_name="gemini-pro")
 # message = "What are some of the pros and cons of Python as a programming language?"
-# llm = ChatOpenAI(api_key="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")
+
 st.title("Galileo AI 🤖")
 
 if 'depth' not in st.session_state:
