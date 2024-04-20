@@ -58,9 +58,13 @@ from streamlit_lottie import st_lottie
 
 from langchain_google_vertexai import VertexAI
 import vertexai
+from langchain_google_vertexai import ChatVertexAI
+
 vertexai.init(project="saraswati-ai", location="us-central1")
 
 llm = VertexAI(model_name="gemini-pro")
+# llm = ChatOpenAI(model='google/gemini-pro')
+# llm = ChatVertexAI(model_name="gemini-pro")
 
 def save_as_pdf(formatted_text):
         pdf = FPDF()
