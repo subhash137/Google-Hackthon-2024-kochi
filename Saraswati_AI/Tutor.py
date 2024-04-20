@@ -62,9 +62,14 @@ from streamlit_lottie import st_lottie
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.utilities import GoogleSerperAPIWrapper
 
-llm = ChatOpenAI(api_key="AIzaSyBdEYoKwmQr3rTkB_rD77D_QBYxfDjPJwQ",
-                 model="google/gemma-2b-it",temperature=0.05)
-
+# llm = ChatOpenAI(api_key="AIzaSyBdEYoKwmQr3rTkB_rD77D_QBYxfDjPJwQ",
+#                  model="google/gemma-2b-it",temperature=0.05)
+from langchain_google_vertexai import VertexAI
+import vertexai
+vertexai.init(project="saraswati-ai", location="us-central1")
+  
+llm = VertexAI(model_name="gemini-pro")
+# message = "What are some of the pros and cons of Python as a programming language?"
 # llm = ChatOpenAI(api_key="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")
 st.title("Galileo AI 🤖")
 
@@ -142,7 +147,7 @@ chain = prompt | llm
 
 @st.cache_data
 def conversation_chat1(query):
-    result = chain.invoke({"question": query,'chat_history':st.session_state['history1'],'depth':st.session_state['depth'],'learning':st.session_state['Learning'],'tone':st.session_state['Tone'],'reasoning':st.session_state['Reasoning']}).content
+    result = chain.invoke({"question": query,'chat_history':st.session_state['history1'],'depth':st.session_state['depth'],'learning':st.session_state['Learning'],'tone':st.session_state['Tone'],'reasoning':st.session_state['Reasoning']})
     st.session_state['history1'].append((st.session_state['past1'][-1], st.session_state['generated1'][-1]))
     
     
