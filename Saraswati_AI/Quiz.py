@@ -8,8 +8,33 @@ import streamlit as st
 import json
 from typing import Dict
 
-from openai import OpenAI
-client = OpenAI(api_key="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")
+from langchain_google_vertexai import VertexAI
+import vertexai
+from langchain_google_vertexai import ChatVertexAI
+
+vertexai.init(project="saraswati-ai", location="us-central1")
+
+llm = VertexAI(model_name="gemini-pro")
+
+template1 = """
+.
+You are an AI Quiz Master.
+Previous conversation:
+{chat_history}
+
+
+New human question: {question}
+Response:"""
+
+
+
+from langchain_core.prompts import PromptTemplate
+
+prompt = PromptTemplate(
+    template=template1,input_variables=['question','chat_history','depth','learning','tone','reasoning']
+)
+chain = prompt | llm
+
 
 chat_history = [
     {
@@ -40,15 +65,22 @@ def get_quiz_from_topic(topic: str) -> Dict[str, str]:
     current_chat.append(current_user_message)
     chat_history.append(current_user_message)
 
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo", messages=current_chat
-    )
-    quiz = response.choices[0].message.content
+    response = chain.invoke({'question':current_chat,'chat_history':chat_history})
+    quiz = response
     current_assistent_message = {"role": "assistant", "content": quiz}
     chat_history.append(current_assistent_message)
-    print(f"Response:\n{quiz}")
-    return json.loads(quiz)
+    # print(f"Response:\n{quiz}")
+    import re
+    quiz = re.sub(r'```json|```', '', quiz)
+
+    # print(quiz.strip())
     
+    # quiz.replace
+    
+    json_string = json.loads(quiz)
+    # json_string.strip("```")
+    # print(quiz)
+    return json_string
 
 topic = st.sidebar.text_input(
     "To change topic just enter in below. From next new quiz question the topic entered here will be used.",
