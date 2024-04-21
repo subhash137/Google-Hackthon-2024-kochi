@@ -1,6 +1,6 @@
 import json
 
-import openai
+
 import streamlit as st
 # from get_quiz import get_quiz_from_topic
 

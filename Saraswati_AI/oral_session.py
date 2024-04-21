@@ -1,11 +1,11 @@
 import speech_recognition as sr
 import streamlit as st
-import time
-import pydub
-from pydub import AudioSegment
+
+
+
 import io
 from streamlit_lottie import st_lottie
-from langchain_google_genai import ChatGoogleGenerativeAI
+
 from langchain_community.utilities import GoogleSerperAPIWrapper
 from langchain_core.prompts import PromptTemplate
 

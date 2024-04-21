@@ -15,3 +15,6 @@ langchain_experimental==0.0.57
 google-cloud-aiplatform
 google-cloud-logging
 streamlit_lottie
+SpeechRecognition
+langchain_openai
+PyAudio
