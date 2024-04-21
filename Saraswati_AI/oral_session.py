@@ -21,7 +21,7 @@ llm = VertexAI(model_name="gemini-pro")
 if 'cht' not in st.session_state:
     st.session_state['cht'] = []
 def speech_to_text(ser):
-    recognizer = sr.Recognizer()
+    recognizer = sr.Recognizer()  
     template1 = """ See this is the text from user . This is the user's course or branch {topic} based on this generate the solution . Based on the topic ask questions . 
         You are a  reviewer and gives feedback to his answers . check the user's text or words. check the words , sentence and unnecessary things. 
         This text is generated from speech to text so main goal here is check oral test i mean english speaking skills so go through text check errors , 

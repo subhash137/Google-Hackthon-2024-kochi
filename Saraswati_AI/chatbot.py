@@ -56,10 +56,12 @@ MessagesPlaceholder,
 SystemMessagePromptTemplate,
 HumanMessagePromptTemplate,
 )
+from langchain_google_vertexai import VertexAIEmbeddings
 from streamlit_lottie import st_lottie
 # llm = ChatOpenAI(api_key="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")
 from langchain_google_vertexai import VertexAI
 import vertexai
+
 vertexai.init(project="saraswati-ai", location="us-central1")
 
 llm = VertexAI(model_name="gemini-pro")
@@ -74,8 +76,6 @@ text_chunks = text_splitter.split_documents(documents)
 #create embeddings
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2",
                                     model_kwargs={'device':"cpu"})
-
-#vectorstore
 
 vector_store = Chroma.from_documents(text_chunks, embeddings)
 # vector_store = FAISS.from_documents(text_chunks,embeddings)
